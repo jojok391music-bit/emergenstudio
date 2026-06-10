@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Emergen Studio</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #F4F5F7;
+            --bg-surface: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #64748B;
+            --border-color: #E2E8F0;
+            --primary-brand: #4F46E5;
+            --primary-hover: #4338CA;
+            --danger: #EF4444;
+            --success: #10B981;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Outfit', sans-serif;
+            color: var(--text-primary);
+        }
+
+        /* Layout */
+        .admin-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Placeholder (For professional look) */
+        .admin-sidebar {
+            width: 260px;
+            background: var(--bg-surface);
+            border-right: 1px solid var(--border-color);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 40px;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+        .sidebar-nav {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .sidebar-nav li a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        .sidebar-nav li a.active {
+            background-color: #EEF2FF;
+            color: var(--primary-brand);
+        }
+        .sidebar-nav li a:hover:not(.active) {
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+        }
+
+        /* Main Content */
+        .admin-main {
+            flex: 1;
+            padding: 40px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+        .admin-header h1 {
+            font-size: 1.875rem;
+            font-weight: 600;
+        }
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Card container */
+        .admin-card {
+            background: var(--bg-surface);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            background: #FAFAFA;
+        }
+        .card-header h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+        .card-body {
+            padding: 24px;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+            background: #FFFFFF;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-brand);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .help-text {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 6px;
+        }
+
+        /* Radio Buttons */
+        .radio-group {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+            text-decoration: none;
+        }
+        .btn-primary {
+            background-color: var(--primary-brand);
+            color: #FFFFFF;
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+        .btn-secondary {
+            background-color: #FFFFFF;
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+        .btn-secondary:hover {
+            background-color: var(--bg-body);
+        }
+
+        /* Auth Screen */
+        .auth-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: var(--bg-body);
+            padding: 20px;
+        }
+        .auth-card {
+            background: var(--bg-surface);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+            text-align: center;
+        }
+        .auth-card img {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 24px;
+        }
+        .auth-card h2 {
+            margin-bottom: 8px;
+            font-size: 1.5rem;
+        }
+        .auth-card p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 32px;
+        }
+
+        /* Utility */
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .gap-16 { gap: 16px; }
+    </style>
+</head>
+<body>
+
+    <!-- AUTHENTICATION SCREEN -->
+    <div id="adminAuthContainer" class="auth-wrapper">
+        <div class="auth-card">
+            <img src="emergenstudioLOGO.svg" alt="Emergen Studio Logo">
+            <h2>Welcome Back</h2>
+            <p>Enter your passcode to access the dashboard.</p>
+            <form id="adminAuthForm">
+                <div class="form-group" style="text-align: left;">
+                    <label for="adminPasscode">Passcode</label>
+                    <input type="password" id="adminPasscode" class="form-control" placeholder="••••••••" required>
+                </div>
+                <p id="authError" class="help-text hidden" style="color: var(--danger); text-align: left; margin-top: -10px; margin-bottom: 20px;">Incorrect passcode. Try again.</p>
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">Login to Dashboard</button>
+            </form>
+            <div style="margin-top: 24px;">
+                <a href="index.html" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem;">← Back to Website</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN DASHBOARD -->
+    <div id="adminDashboardContainer" class="admin-wrapper hidden">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <a href="index.html" class="sidebar-logo">
+                <img src="emergenstudioLOGO.svg" alt="Logo" style="width: 32px; height: 32px;">
+                Emergen Studio
+            </a>
+            <ul class="sidebar-nav">
+                <li><a href="#" class="active">Content Management</a></li>
+                <li><a href="index.html" target="_blank">View Live Site ↗</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="admin-main">
+            <div class="admin-header">
+                <div>
+                    <h1>Content Management</h1>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 4px;">Update website text, links, and video settings.</p>
+                </div>
+                <div class="header-actions">
+                    <button onclick="lockAdminPanel()" class="btn btn-secondary">Logout</button>
+                    <button type="submit" form="adminDashboardForm" id="adminSaveAllBtnTop" class="btn btn-primary">Save Changes</button>
+                </div>
+            </div>
+
+            <p id="saveSuccessMsg" class="hidden" style="color: var(--success); background: #ECFDF5; padding: 12px 16px; border-radius: var(--radius-sm); border: 1px solid #A7F3D0; margin-bottom: 24px; font-weight: 500;">✓ Changes saved successfully!</p>
+
+            <form id="adminDashboardForm">
+                
+                <!-- SECTION: Video Settings -->
+                <div class="admin-card">
+                    <div class="card-header">
+                        <h3>1. Hero Video Settings</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="videoSource" value="url" id="sourceUrl" checked>
+                                Video URL (YouTube/Instagram)
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="videoSource" value="file" id="sourceFile">
+                                Upload MP4 File
+                            </label>
+                        </div>
+                        
+                        <div id="urlInputContainer" class="form-group">
+                            <label for="adminVideoUrl">Video Link</label>
+                            <input type="url" id="adminVideoUrl" class="form-control" placeholder="https://www.youtube.com/watch?v=...">
+                        </div>
+                        
+                        <div id="fileInputContainer" class="form-group hidden">
+                            <label for="adminVideoFile">Upload MP4</label>
+                            <input type="file" id="adminVideoFile" accept="video/mp4" class="form-control" style="padding: 8px;">
+                            <p class="help-text">Video is stored locally in your browser database.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION: Social Links -->
+                <div class="admin-card">
+                    <div class="card-header">
+                        <h3>2. Social Media Links</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="socialInstagram">Instagram URL</label>
+                                <input type="url" id="socialInstagram" class="form-control" placeholder="https://instagram.com/...">
+                            </div>
+                            <div class="form-group">
+                                <label for="socialLinkedin">LinkedIn URL</label>
+                                <input type="url" id="socialLinkedin" class="form-control" placeholder="https://linkedin.com/...">
+                            </div>
+                            <div class="form-group">
+                                <label for="socialX">X (Twitter) URL</label>
+                                <input type="url" id="socialX" class="form-control" placeholder="https://twitter.com/...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION: Hero Stats -->
+                <div class="admin-card">
+                    <div class="card-header">
+                        <h3>3. Hero Stats (Bento Grid)</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row" style="grid-template-columns: 1fr 1fr 1fr;">
+                            <div class="form-group">
+                                <label for="heroRoi">Ad Performance ROI</label>
+                                <input type="text" id="heroRoi" class="form-control" placeholder="+248%">
+                            </div>
+                            <div class="form-group">
+                                <label for="heroLeads">Leads Generated</label>
+                                <input type="text" id="heroLeads" class="form-control" placeholder="1,284">
+                            </div>
+                            <div class="form-group">
+                                <label for="heroAccounts">Accounts Reached</label>
+                                <input type="text" id="heroAccounts" class="form-control" placeholder="3.7M">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION: About Us -->
+                <div class="admin-card">
+                    <div class="card-header">
+                        <h3>4. About Us Section</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="aboutParagraph">Description Paragraph</label>
+                            <textarea id="aboutParagraph" class="form-control" placeholder="Enter your agency's description..."></textarea>
+                        </div>
+                        <div class="form-row" style="grid-template-columns: 1fr 1fr; margin-top: 24px;">
+                            <div class="form-group">
+                                <label for="aboutStat1">Stat 1 Value</label>
+                                <input type="text" id="aboutStat1" class="form-control" placeholder="50+">
+                            </div>
+                            <div class="form-group">
+                                <label for="aboutLabel1">Stat 1 Label</label>
+                                <input type="text" id="aboutLabel1" class="form-control" placeholder="Brands Scaled">
+                            </div>
+                            <div class="form-group">
+                                <label for="aboutStat2">Stat 2 Value</label>
+                                <input type="text" id="aboutStat2" class="form-control" placeholder="10M+">
+                            </div>
+                            <div class="form-group">
+                                <label for="aboutLabel2">Stat 2 Label</label>
+                                <input type="text" id="aboutLabel2" class="form-control" placeholder="Ad Spend Managed">
+                            </div>
+                            <div class="form-group">
+                                <label for="aboutStat3">Stat 3 Value</label>
+                                <input type="text" id="aboutStat3" class="form-control" placeholder="200+">
+                            </div>
+                            <div class="form-group">
+                                <label for="aboutLabel3">Stat 3 Label</label>
+                                <input type="text" id="aboutLabel3" class="form-control" placeholder="Campaigns">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION: Our Work / Portfolio -->
+                <div class="admin-card">
+                    <div class="card-header">
+                        <h3>5. Portfolio (Our Work)</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row" style="margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--border-color);">
+                            <div class="form-group">
+                                <label for="workTitle1">Portfolio Item 1 - Title</label>
+                                <input type="text" id="workTitle1" class="form-control" placeholder="Fitness Empire">
+                            </div>
+                            <div class="form-group">
+                                <label for="workDesc1">Portfolio Item 1 - Subtitle</label>
+                                <input type="text" id="workDesc1" class="form-control" placeholder="Performance Marketing & Content">
+                            </div>
+                            <div class="form-group" style="grid-column: span 2;">
+                                <label for="workImg1">Portfolio Item 1 - Image (Optional)</label>
+                                <input type="file" id="workImg1" accept="image/*" class="form-control" style="padding: 8px;">
+                                <p class="help-text">Leave blank to keep existing image.</p>
+                            </div>
+                        </div>
+                        <div class="form-row" style="margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--border-color);">
+                            <div class="form-group">
+                                <label for="workTitle2">Portfolio Item 2 - Title</label>
+                                <input type="text" id="workTitle2" class="form-control" placeholder="Café De Kolkata">
+                            </div>
+                            <div class="form-group">
+                                <label for="workDesc2">Portfolio Item 2 - Subtitle</label>
+                                <input type="text" id="workDesc2" class="form-control" placeholder="Branding & Social Media">
+                            </div>
+                            <div class="form-group" style="grid-column: span 2;">
+                                <label for="workImg2">Portfolio Item 2 - Image (Optional)</label>
+                                <input type="file" id="workImg2" accept="image/*" class="form-control" style="padding: 8px;">
+                                <p class="help-text">Leave blank to keep existing image.</p>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="workTitle3">Portfolio Item 3 - Title</label>
+                                <input type="text" id="workTitle3" class="form-control" placeholder="Urban Threads">
+                            </div>
+                            <div class="form-group">
+                                <label for="workDesc3">Portfolio Item 3 - Subtitle</label>
+                                <input type="text" id="workDesc3" class="form-control" placeholder="E-commerce Website & Ads">
+                            </div>
+                            <div class="form-group" style="grid-column: span 2;">
+                                <label for="workImg3">Portfolio Item 3 - Image (Optional)</label>
+                                <input type="file" id="workImg3" accept="image/*" class="form-control" style="padding: 8px;">
+                                <p class="help-text">Leave blank to keep existing image.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION: Marquee Brands -->
+                <div class="admin-card">
+                    <div class="card-header">
+                        <h3>6. Marquee Trusted Brands</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="marqueeBrands">Brand Names (Comma-separated. Use | to denote the bold part, e.g., CAFÉ | DE KOLKATA)</label>
+                            <textarea id="marqueeBrands" class="form-control" placeholder="CAFÉ | DE KOLKATA, FITNESS | EMPIRE, The | Bakeshop, URBAN | THREADS"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; margin-top: 32px; margin-bottom: 80px;">
+                    <button type="submit" id="adminSaveAllBtnBottom" class="btn btn-primary" style="padding: 12px 32px; font-size: 1rem;">Save All Changes</button>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
