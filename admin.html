@@ -346,7 +346,7 @@
                         <div id="fileInputContainer" class="form-group hidden">
                             <label for="adminVideoFile">Upload MP4</label>
                             <input type="file" id="adminVideoFile" accept="video/mp4" class="form-control" style="padding: 8px;">
-                            <p class="help-text">Video is stored locally in your browser database.</p>
+                            <p class="help-text">Video is uploaded and stored securely on the server.</p>
                         </div>
                     </div>
                 </div>
@@ -499,6 +499,20 @@
                         <div class="form-group">
                             <label for="marqueeBrands">Brand Names (Comma-separated. Use | to denote the bold part, e.g., CAFÉ | DE KOLKATA)</label>
                             <textarea id="marqueeBrands" class="form-control" placeholder="CAFÉ | DE KOLKATA, FITNESS | EMPIRE, The | Bakeshop, URBAN | THREADS"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION: Audit Form Settings -->
+                <div class="admin-card">
+                    <div class="card-header">
+                        <h3>7. Audit Form Settings</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="googleSheetUrl">Google Apps Script Web App URL (For Google Sheets Integration)</label>
+                            <input type="url" id="googleSheetUrl" class="form-control" placeholder="https://script.google.com/macros/s/...">
+                            <p class="help-text">Deploy your Apps Script as a Web App and paste the URL here to save form submissions directly to your Google Sheet.</p>
                         </div>
                     </div>
                 </div>

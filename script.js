@@ -116,9 +116,16 @@ if (auditForm) {
         auditSubmitBtn.disabled = true;
 
         // Google Sheets integration (Apps Script Web App)
-        // INSTRUCTION FOR USER: Replace this URL with your actual Google Apps Script Web App URL
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbyjYbUbIyAv1ybJXbQZz0tjFKV7xoMaJGSOfYF-SVgj_Vc2_H9gWfuipHnm0TwE5Uf_/exec';
-        const formData = new FormData();
+        const scriptURL = appSettings.googleSheetUrl;
+        
+        if (!scriptURL) {
+            alert('Google Sheets integration is not configured. Please set the Apps Script URL in the Admin Dashboard.');
+            auditSubmitBtn.textContent = 'Request Audit';
+            auditSubmitBtn.disabled = false;
+            return;
+        }
+
+        const formData = new URLSearchParams();
         formData.append('Company', document.getElementById('auditCompany').value);
         formData.append('Phone', auditPhone.value);
         formData.append('Email', auditEmail.value);
@@ -146,46 +153,26 @@ if (auditForm) {
 }
 
 // ==========================================
-// IndexedDB for Video Retrieval
+// Fetch Settings from Server
 // ==========================================
 
-const DB_NAME = 'EmergenStudioDB';
-const STORE_NAME = 'VideoStore';
-const DB_VERSION = 1;
+let appSettings = {};
 
-function openDB() {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, DB_VERSION);
-        request.onupgradeneeded = (e) => {
-            const db = e.target.result;
-            if (!db.objectStoreNames.contains(STORE_NAME)) {
-                db.createObjectStore(STORE_NAME);
-            }
-        };
-        request.onsuccess = (e) => resolve(e.target.result);
-        request.onerror = (e) => reject(e.target.error);
-    });
-}
-
-async function getVideoBlob() {
-    return getMediaBlob('uploadedVideo');
-}
-
-async function getMediaBlob(key) {
-    const db = await openDB();
-    return new Promise((resolve, reject) => {
-        const transaction = db.transaction(STORE_NAME, 'readonly');
-        const store = transaction.objectStore(STORE_NAME);
-        const request = store.get(key);
-        request.onsuccess = (e) => resolve(e.target.result);
-        request.onerror = (e) => reject(e.target.error);
-    });
+async function fetchSettings() {
+    try {
+        const response = await fetch('/api/settings');
+        if (response.ok) {
+            appSettings = await response.json();
+        }
+    } catch (e) {
+        console.error('Failed to fetch settings', e);
+    }
 }
 
 // Dynamic Video Embed Loader
 function loadVideo() {
-    const videoType = localStorage.getItem('videoType') || 'placeholder';
-    const videoUrl = localStorage.getItem('videoUrl') || '';
+    const videoType = appSettings.videoType || 'placeholder';
+    const videoUrl = appSettings.videoUrl || '';
     const container = document.getElementById('videoContainer');
     
     if (!container) return;
@@ -229,18 +216,8 @@ function loadVideo() {
         } else {
             renderPlaceholder();
         }
-    } else if (videoType === 'file') {
-        getVideoBlob().then(blob => {
-            if (blob) {
-                const objectUrl = URL.createObjectURL(blob);
-                container.innerHTML = `<video src="${objectUrl}" autoplay loop muted playsinline style="width:100%; height:100%; object-fit: cover;"></video>`;
-            } else {
-                renderPlaceholder();
-            }
-        }).catch(err => {
-            console.error('Failed to get video blob', err);
-            renderPlaceholder();
-        });
+    } else if (videoType === 'file' && appSettings.uploadedVideoPath) {
+        container.innerHTML = `<video src="${appSettings.uploadedVideoPath}" autoplay loop muted playsinline style="width:100%; height:100%; object-fit: cover;"></video>`;
     } else {
         renderPlaceholder();
     }
@@ -258,66 +235,66 @@ function renderPlaceholder() {
 }
 
 // ==========================================
-// Hydrate Dynamic Data from LocalStorage
+// Hydrate Dynamic Data from Settings
 // ==========================================
 function hydrateData() {
     // Hero Stats
-    const roi = localStorage.getItem('heroRoi');
+    const roi = appSettings.heroRoi;
     if (roi) document.getElementById('stat-roi').innerHTML = `${roi}\n<span class="subtext">vs last 30 days</span>`;
     
-    const leads = localStorage.getItem('heroLeads');
+    const leads = appSettings.heroLeads;
     if (leads) document.getElementById('stat-leads').innerHTML = `${leads}\n<span class="subtext">+312% vs last 30 days</span>`;
     
-    const accounts = localStorage.getItem('heroAccounts');
+    const accounts = appSettings.heroAccounts;
     if (accounts) document.getElementById('stat-accounts').innerHTML = `${accounts}\n<span class="subtext trend-up">+210%</span>`;
 
     // Social Links
-    const instagram = localStorage.getItem('socialInstagram');
+    const instagram = appSettings.socialInstagram;
     if (instagram) document.getElementById('social-instagram').href = instagram;
     
-    const linkedin = localStorage.getItem('socialLinkedin');
+    const linkedin = appSettings.socialLinkedin;
     if (linkedin) document.getElementById('social-linkedin').href = linkedin;
     
-    const twitter = localStorage.getItem('socialX');
+    const twitter = appSettings.socialX;
     if (twitter) document.getElementById('social-x').href = twitter;
 
     // About Paragraph & Stats
-    const aboutParagraph = localStorage.getItem('aboutParagraph');
+    const aboutParagraph = appSettings.aboutParagraph;
     if (aboutParagraph) document.getElementById('about-paragraph').textContent = aboutParagraph;
 
-    const aboutStat1 = localStorage.getItem('aboutStat1');
-    const aboutLabel1 = localStorage.getItem('aboutLabel1');
+    const aboutStat1 = appSettings.aboutStat1;
+    const aboutLabel1 = appSettings.aboutLabel1;
     if (aboutStat1) document.getElementById('about-stat-num-1').textContent = aboutStat1;
     if (aboutLabel1) document.getElementById('about-stat-label-1').textContent = aboutLabel1;
 
-    const aboutStat2 = localStorage.getItem('aboutStat2');
-    const aboutLabel2 = localStorage.getItem('aboutLabel2');
+    const aboutStat2 = appSettings.aboutStat2;
+    const aboutLabel2 = appSettings.aboutLabel2;
     if (aboutStat2) document.getElementById('about-stat-num-2').textContent = aboutStat2;
     if (aboutLabel2) document.getElementById('about-stat-label-2').textContent = aboutLabel2;
 
-    const aboutStat3 = localStorage.getItem('aboutStat3');
-    const aboutLabel3 = localStorage.getItem('aboutLabel3');
+    const aboutStat3 = appSettings.aboutStat3;
+    const aboutLabel3 = appSettings.aboutLabel3;
     if (aboutStat3) document.getElementById('about-stat-num-3').textContent = aboutStat3;
     if (aboutLabel3) document.getElementById('about-stat-label-3').textContent = aboutLabel3;
 
     // Portfolio
-    const workTitle1 = localStorage.getItem('workTitle1');
-    const workDesc1 = localStorage.getItem('workDesc1');
+    const workTitle1 = appSettings.workTitle1;
+    const workDesc1 = appSettings.workDesc1;
     if (workTitle1) document.getElementById('work-title-1').textContent = workTitle1;
     if (workDesc1) document.getElementById('work-desc-1').textContent = workDesc1;
 
-    const workTitle2 = localStorage.getItem('workTitle2');
-    const workDesc2 = localStorage.getItem('workDesc2');
+    const workTitle2 = appSettings.workTitle2;
+    const workDesc2 = appSettings.workDesc2;
     if (workTitle2) document.getElementById('work-title-2').textContent = workTitle2;
     if (workDesc2) document.getElementById('work-desc-2').textContent = workDesc2;
 
-    const workTitle3 = localStorage.getItem('workTitle3');
-    const workDesc3 = localStorage.getItem('workDesc3');
+    const workTitle3 = appSettings.workTitle3;
+    const workDesc3 = appSettings.workDesc3;
     if (workTitle3) document.getElementById('work-title-3').textContent = workTitle3;
     if (workDesc3) document.getElementById('work-desc-3').textContent = workDesc3;
 
     // Marquee Brands
-    const marqueeBrandsStr = localStorage.getItem('marqueeBrands');
+    const marqueeBrandsStr = appSettings.marqueeBrands;
     if (marqueeBrandsStr) {
         const brandsList = marqueeBrandsStr.split(',').map(b => b.trim()).filter(b => b);
         let marqueeHtml = '';
@@ -339,23 +316,35 @@ function hydrateData() {
     }
 
     // Portfolio Images
-    for (let i = 1; i <= 3; i++) {
-        getMediaBlob(`workImage${i}`).then(blob => {
-            if (blob) {
-                const objectUrl = URL.createObjectURL(blob);
-                const placeholder = document.querySelector(`.portfolio-item:nth-child(${i}) .portfolio-img-placeholder`);
-                if (placeholder) {
-                    placeholder.style.backgroundImage = `url(${objectUrl})`;
-                    placeholder.style.backgroundSize = 'cover';
-                    placeholder.style.backgroundPosition = 'center';
-                }
-            }
-        }).catch(err => console.error('Failed to load portfolio image', i, err));
+    if (appSettings.workImage1Path) {
+        const placeholder = document.querySelector(`.portfolio-item:nth-child(1) .portfolio-img-placeholder`);
+        if (placeholder) {
+            placeholder.style.backgroundImage = `url(${appSettings.workImage1Path})`;
+            placeholder.style.backgroundSize = 'cover';
+            placeholder.style.backgroundPosition = 'center';
+        }
+    }
+    if (appSettings.workImage2Path) {
+        const placeholder = document.querySelector(`.portfolio-item:nth-child(2) .portfolio-img-placeholder`);
+        if (placeholder) {
+            placeholder.style.backgroundImage = `url(${appSettings.workImage2Path})`;
+            placeholder.style.backgroundSize = 'cover';
+            placeholder.style.backgroundPosition = 'center';
+        }
+    }
+    if (appSettings.workImage3Path) {
+        const placeholder = document.querySelector(`.portfolio-item:nth-child(3) .portfolio-img-placeholder`);
+        if (placeholder) {
+            placeholder.style.backgroundImage = `url(${appSettings.workImage3Path})`;
+            placeholder.style.backgroundSize = 'cover';
+            placeholder.style.backgroundPosition = 'center';
+        }
     }
 }
 
 // Initial Load on page start
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    await fetchSettings();
     loadVideo();
     hydrateData();
 });

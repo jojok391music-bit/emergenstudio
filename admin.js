@@ -13,6 +13,8 @@ const authError = document.getElementById('authError');
 const adminDashboardForm = document.getElementById('adminDashboardForm');
 const saveSuccessMsg = document.getElementById('saveSuccessMsg');
 
+let appSettings = {};
+
 // Check session on load
 document.addEventListener('DOMContentLoaded', () => {
     if (sessionStorage.getItem('isAdminAuthenticated') === 'true') {
@@ -29,9 +31,10 @@ function showAuth() {
     authError.classList.add('hidden');
 }
 
-function showDashboard() {
+async function showDashboard() {
     adminAuthContainer.classList.add('hidden');
     adminDashboardContainer.classList.remove('hidden');
+    await fetchSettings();
     loadSettingsIntoForm();
 }
 
@@ -57,39 +60,36 @@ if (adminAuthForm) {
 }
 
 // ==========================================
-// IndexedDB for Video Uploads
+// API Interaction
 // ==========================================
-const DB_NAME = 'EmergenStudioDB';
-const STORE_NAME = 'VideoStore';
-const DB_VERSION = 1;
 
-function openDB() {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, DB_VERSION);
-        request.onupgradeneeded = (e) => {
-            const db = e.target.result;
-            if (!db.objectStoreNames.contains(STORE_NAME)) {
-                db.createObjectStore(STORE_NAME);
-            }
-        };
-        request.onsuccess = (e) => resolve(e.target.result);
-        request.onerror = (e) => reject(e.target.error);
-    });
+async function fetchSettings() {
+    try {
+        const response = await fetch('/api/settings');
+        if (response.ok) {
+            appSettings = await response.json();
+        }
+    } catch (e) {
+        console.error('Failed to fetch settings', e);
+    }
 }
 
-async function saveMediaBlob(blob, key) {
-    const db = await openDB();
-    return new Promise((resolve, reject) => {
-        const transaction = db.transaction(STORE_NAME, 'readwrite');
-        const store = transaction.objectStore(STORE_NAME);
-        const request = store.put(blob, key);
-        request.onsuccess = () => resolve();
-        request.onerror = (e) => reject(e.target.error);
-    });
-}
-
-async function saveVideoBlob(blob) {
-    return saveMediaBlob(blob, 'uploadedVideo');
+async function uploadFile(file) {
+    if (!file) return null;
+    try {
+        const response = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'X-Filename': file.name },
+            body: file
+        });
+        if (response.ok) {
+            const data = await response.json();
+            return data.path;
+        }
+    } catch (e) {
+        console.error('Failed to upload file', e);
+    }
+    return null;
 }
 
 // ==========================================
@@ -117,8 +117,8 @@ if (sourceUrlRadio && sourceFileRadio) {
 // Load Settings
 function loadSettingsIntoForm() {
     // 1. Video
-    const videoType = localStorage.getItem('videoType') || 'url';
-    const videoUrl = localStorage.getItem('videoUrl') || '';
+    const videoType = appSettings.videoType || 'url';
+    const videoUrl = appSettings.videoUrl || '';
     if (videoType === 'url') {
         sourceUrlRadio.checked = true;
         urlInputContainer.classList.remove('hidden');
@@ -131,39 +131,42 @@ function loadSettingsIntoForm() {
     document.getElementById('adminVideoUrl').value = videoUrl;
 
     // 2. Social Links
-    document.getElementById('socialInstagram').value = localStorage.getItem('socialInstagram') || '';
-    document.getElementById('socialLinkedin').value = localStorage.getItem('socialLinkedin') || '';
-    document.getElementById('socialX').value = localStorage.getItem('socialX') || '';
+    document.getElementById('socialInstagram').value = appSettings.socialInstagram || '';
+    document.getElementById('socialLinkedin').value = appSettings.socialLinkedin || '';
+    document.getElementById('socialX').value = appSettings.socialX || '';
 
     // 3. Hero Stats
-    document.getElementById('heroRoi').value = localStorage.getItem('heroRoi') || '+248%';
-    document.getElementById('heroLeads').value = localStorage.getItem('heroLeads') || '1,284';
-    document.getElementById('heroAccounts').value = localStorage.getItem('heroAccounts') || '3.7M';
+    document.getElementById('heroRoi').value = appSettings.heroRoi || '+248%';
+    document.getElementById('heroLeads').value = appSettings.heroLeads || '1,284';
+    document.getElementById('heroAccounts').value = appSettings.heroAccounts || '3.7M';
 
     // 4. About Us
     const defaultAbout = 'Emergen Studio is built on a simple philosophy: beautiful design should drive measurable results. We are a startup-inspired agency that moves fast, creates premium experiences, and optimizes for growth.';
-    document.getElementById('aboutParagraph').value = localStorage.getItem('aboutParagraph') || defaultAbout;
+    document.getElementById('aboutParagraph').value = appSettings.aboutParagraph || defaultAbout;
     
-    document.getElementById('aboutStat1').value = localStorage.getItem('aboutStat1') || '50+';
-    document.getElementById('aboutLabel1').value = localStorage.getItem('aboutLabel1') || 'Brands Scaled';
-    document.getElementById('aboutStat2').value = localStorage.getItem('aboutStat2') || '10M+';
-    document.getElementById('aboutLabel2').value = localStorage.getItem('aboutLabel2') || 'Ad Spend Managed';
-    document.getElementById('aboutStat3').value = localStorage.getItem('aboutStat3') || '200+';
-    document.getElementById('aboutLabel3').value = localStorage.getItem('aboutLabel3') || 'Campaigns';
+    document.getElementById('aboutStat1').value = appSettings.aboutStat1 || '50+';
+    document.getElementById('aboutLabel1').value = appSettings.aboutLabel1 || 'Brands Scaled';
+    document.getElementById('aboutStat2').value = appSettings.aboutStat2 || '10M+';
+    document.getElementById('aboutLabel2').value = appSettings.aboutLabel2 || 'Ad Spend Managed';
+    document.getElementById('aboutStat3').value = appSettings.aboutStat3 || '200+';
+    document.getElementById('aboutLabel3').value = appSettings.aboutLabel3 || 'Campaigns';
 
     // 5. Portfolio
-    document.getElementById('workTitle1').value = localStorage.getItem('workTitle1') || 'Fitness Empire';
-    document.getElementById('workDesc1').value = localStorage.getItem('workDesc1') || 'Performance Marketing & Content';
+    document.getElementById('workTitle1').value = appSettings.workTitle1 || 'Fitness Empire';
+    document.getElementById('workDesc1').value = appSettings.workDesc1 || 'Performance Marketing & Content';
     
-    document.getElementById('workTitle2').value = localStorage.getItem('workTitle2') || 'Café De Kolkata';
-    document.getElementById('workDesc2').value = localStorage.getItem('workDesc2') || 'Branding & Social Media';
+    document.getElementById('workTitle2').value = appSettings.workTitle2 || 'Café De Kolkata';
+    document.getElementById('workDesc2').value = appSettings.workDesc2 || 'Branding & Social Media';
     
-    document.getElementById('workTitle3').value = localStorage.getItem('workTitle3') || 'Urban Threads';
-    document.getElementById('workDesc3').value = localStorage.getItem('workDesc3') || 'E-commerce Website & Ads';
+    document.getElementById('workTitle3').value = appSettings.workTitle3 || 'Urban Threads';
+    document.getElementById('workDesc3').value = appSettings.workDesc3 || 'E-commerce Website & Ads';
 
     // 6. Marquee Brands
     const defaultMarquee = 'CAFÉ | DE KOLKATA, FITNESS | EMPIRE, The | Bakeshop, URBAN | THREADS, HOUSE OF | LUXE, GRILL | NATION';
-    document.getElementById('marqueeBrands').value = localStorage.getItem('marqueeBrands') || defaultMarquee;
+    document.getElementById('marqueeBrands').value = appSettings.marqueeBrands || defaultMarquee;
+
+    // 7. Audit Form Settings
+    document.getElementById('googleSheetUrl').value = appSettings.googleSheetUrl || '';
 }
 
 // Save Settings
@@ -177,64 +180,83 @@ if (adminDashboardForm) {
         if(topBtn) topBtn.disabled = true;
         if(bottomBtn) bottomBtn.disabled = true;
 
-        // Save Video Settings
+        // Video Settings
         const selectedVideoType = document.querySelector('input[name="videoSource"]:checked').value;
-        localStorage.setItem('videoType', selectedVideoType);
+        appSettings.videoType = selectedVideoType;
         
         if (selectedVideoType === 'url') {
-            localStorage.setItem('videoUrl', document.getElementById('adminVideoUrl').value.trim());
+            appSettings.videoUrl = document.getElementById('adminVideoUrl').value.trim();
         } else if (selectedVideoType === 'file') {
             const file = document.getElementById('adminVideoFile').files[0];
             if (file) {
-                try {
-                    await saveVideoBlob(file);
-                } catch (err) {
-                    console.error('IndexedDB Save Error', err);
-                    alert('Error saving the video file.');
-                }
+                const path = await uploadFile(file);
+                if (path) appSettings.uploadedVideoPath = path;
             }
         }
 
-        // Save Social Links
-        localStorage.setItem('socialInstagram', document.getElementById('socialInstagram').value.trim());
-        localStorage.setItem('socialLinkedin', document.getElementById('socialLinkedin').value.trim());
-        localStorage.setItem('socialX', document.getElementById('socialX').value.trim());
+        // Social Links
+        appSettings.socialInstagram = document.getElementById('socialInstagram').value.trim();
+        appSettings.socialLinkedin = document.getElementById('socialLinkedin').value.trim();
+        appSettings.socialX = document.getElementById('socialX').value.trim();
 
-        // Save Hero Stats
-        localStorage.setItem('heroRoi', document.getElementById('heroRoi').value.trim());
-        localStorage.setItem('heroLeads', document.getElementById('heroLeads').value.trim());
-        localStorage.setItem('heroAccounts', document.getElementById('heroAccounts').value.trim());
+        // Hero Stats
+        appSettings.heroRoi = document.getElementById('heroRoi').value.trim();
+        appSettings.heroLeads = document.getElementById('heroLeads').value.trim();
+        appSettings.heroAccounts = document.getElementById('heroAccounts').value.trim();
 
-        // Save About Us
-        localStorage.setItem('aboutParagraph', document.getElementById('aboutParagraph').value.trim());
+        // About Us
+        appSettings.aboutParagraph = document.getElementById('aboutParagraph').value.trim();
         
-        localStorage.setItem('aboutStat1', document.getElementById('aboutStat1').value.trim());
-        localStorage.setItem('aboutLabel1', document.getElementById('aboutLabel1').value.trim());
-        localStorage.setItem('aboutStat2', document.getElementById('aboutStat2').value.trim());
-        localStorage.setItem('aboutLabel2', document.getElementById('aboutLabel2').value.trim());
-        localStorage.setItem('aboutStat3', document.getElementById('aboutStat3').value.trim());
-        localStorage.setItem('aboutLabel3', document.getElementById('aboutLabel3').value.trim());
+        appSettings.aboutStat1 = document.getElementById('aboutStat1').value.trim();
+        appSettings.aboutLabel1 = document.getElementById('aboutLabel1').value.trim();
+        appSettings.aboutStat2 = document.getElementById('aboutStat2').value.trim();
+        appSettings.aboutLabel2 = document.getElementById('aboutLabel2').value.trim();
+        appSettings.aboutStat3 = document.getElementById('aboutStat3').value.trim();
+        appSettings.aboutLabel3 = document.getElementById('aboutLabel3').value.trim();
 
-        // Save Portfolio
-        localStorage.setItem('workTitle1', document.getElementById('workTitle1').value.trim());
-        localStorage.setItem('workDesc1', document.getElementById('workDesc1').value.trim());
-        localStorage.setItem('workTitle2', document.getElementById('workTitle2').value.trim());
-        localStorage.setItem('workDesc2', document.getElementById('workDesc2').value.trim());
-        localStorage.setItem('workTitle3', document.getElementById('workTitle3').value.trim());
-        localStorage.setItem('workDesc3', document.getElementById('workDesc3').value.trim());
+        // Portfolio
+        appSettings.workTitle1 = document.getElementById('workTitle1').value.trim();
+        appSettings.workDesc1 = document.getElementById('workDesc1').value.trim();
+        appSettings.workTitle2 = document.getElementById('workTitle2').value.trim();
+        appSettings.workDesc2 = document.getElementById('workDesc2').value.trim();
+        appSettings.workTitle3 = document.getElementById('workTitle3').value.trim();
+        appSettings.workDesc3 = document.getElementById('workDesc3').value.trim();
 
-        // Save Portfolio Images
+        // Portfolio Images
         const img1 = document.getElementById('workImg1').files[0];
-        if (img1) await saveMediaBlob(img1, 'workImage1');
+        if (img1) {
+            const path1 = await uploadFile(img1);
+            if (path1) appSettings.workImage1Path = path1;
+        }
         
         const img2 = document.getElementById('workImg2').files[0];
-        if (img2) await saveMediaBlob(img2, 'workImage2');
+        if (img2) {
+            const path2 = await uploadFile(img2);
+            if (path2) appSettings.workImage2Path = path2;
+        }
 
         const img3 = document.getElementById('workImg3').files[0];
-        if (img3) await saveMediaBlob(img3, 'workImage3');
+        if (img3) {
+            const path3 = await uploadFile(img3);
+            if (path3) appSettings.workImage3Path = path3;
+        }
 
-        // Save Marquee Brands
-        localStorage.setItem('marqueeBrands', document.getElementById('marqueeBrands').value.trim());
+        // Marquee Brands
+        appSettings.marqueeBrands = document.getElementById('marqueeBrands').value.trim();
+
+        // Audit Form Settings
+        appSettings.googleSheetUrl = document.getElementById('googleSheetUrl').value.trim();
+
+        // Save everything to the backend
+        try {
+            await fetch('/api/settings', {
+                method: 'POST',
+                body: JSON.stringify(appSettings)
+            });
+        } catch (err) {
+            console.error('Failed to save settings', err);
+            alert('Error saving settings to the server.');
+        }
 
         // Show Success
         if(topBtn) topBtn.disabled = false;
