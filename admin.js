@@ -65,7 +65,7 @@ if (adminAuthForm) {
 
 async function fetchSettings() {
     try {
-        const response = await fetch('/api/settings');
+        const response = await fetch('database.json');
         if (response.ok) {
             appSettings = await response.json();
         }
