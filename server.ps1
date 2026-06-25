@@ -42,8 +42,12 @@ try {
                 $context.Response.OutputStream.Write($resBytes, 0, $resBytes.Length)
             }
             elseif ($method -eq 'POST' -and $requestUrl -eq '/api/upload') {
-                $filename = $context.Request.Headers["X-Filename"]
-                if (-not $filename) { $filename = "upload.bin" }
+                $rawFilename = $context.Request.Headers["X-Filename"]
+                if ($rawFilename) {
+                    $filename = [System.Uri]::UnescapeDataString($rawFilename)
+                } else {
+                    $filename = "upload.bin"
+                }
                 
                 # Sanitize filename to prevent path traversal
                 $filename = [System.IO.Path]::GetFileName($filename)
@@ -83,20 +87,62 @@ try {
         }
 
         if (Test-Path $filePath -PathType Leaf) {
-            $content = [System.IO.File]::ReadAllBytes($filePath)
-            $context.Response.ContentLength64 = $content.Length
+            $fileStream = [System.IO.File]::OpenRead($filePath)
+            $fileSize = $fileStream.Length
             
-            if ($filePath.EndsWith('.css')) { $context.Response.ContentType = 'text/css' }
-            elseif ($filePath.EndsWith('.js')) { $context.Response.ContentType = 'application/javascript' }
-            elseif ($filePath.EndsWith('.html')) { $context.Response.ContentType = 'text/html' }
-            elseif ($filePath.EndsWith('.svg')) { $context.Response.ContentType = 'image/svg+xml' }
-            elseif ($filePath.EndsWith('.pdf')) { $context.Response.ContentType = 'application/pdf' }
-            elseif ($filePath.EndsWith('.mp4')) { $context.Response.ContentType = 'video/mp4' }
-            elseif ($filePath.EndsWith('.webm')) { $context.Response.ContentType = 'video/webm' }
-            elseif ($filePath.EndsWith('.jpg') -or $filePath.EndsWith('.jpeg')) { $context.Response.ContentType = 'image/jpeg' }
-            elseif ($filePath.EndsWith('.png')) { $context.Response.ContentType = 'image/png' }
+            $contentType = 'application/octet-stream'
+            if ($filePath.EndsWith('.css')) { $contentType = 'text/css' }
+            elseif ($filePath.EndsWith('.js')) { $contentType = 'application/javascript' }
+            elseif ($filePath.EndsWith('.html')) { $contentType = 'text/html' }
+            elseif ($filePath.EndsWith('.svg')) { $contentType = 'image/svg+xml' }
+            elseif ($filePath.EndsWith('.pdf')) { $contentType = 'application/pdf' }
+            elseif ($filePath.EndsWith('.mp4')) { $contentType = 'video/mp4' }
+            elseif ($filePath.EndsWith('.webm')) { $contentType = 'video/webm' }
+            elseif ($filePath.EndsWith('.jpg') -or $filePath.EndsWith('.jpeg')) { $contentType = 'image/jpeg' }
+            elseif ($filePath.EndsWith('.png')) { $contentType = 'image/png' }
             
-            $context.Response.OutputStream.Write($content, 0, $content.Length)
+            $context.Response.ContentType = $contentType
+            $context.Response.Headers.Add("Accept-Ranges", "bytes")
+            
+            $rangeHeader = $context.Request.Headers["Range"]
+            if ($rangeHeader -and $rangeHeader.StartsWith("bytes=")) {
+                $range = $rangeHeader.Substring(6)
+                $rangeParts = $range.Split('-')
+                $start = 0
+                $end = $fileSize - 1
+                
+                if ($rangeParts[0] -ne "") { $start = [long]$rangeParts[0] }
+                if ($rangeParts.Length -gt 1 -and $rangeParts[1] -ne "") { $end = [long]$rangeParts[1] }
+                
+                if ($start -gt $end -or $start -ge $fileSize) {
+                    $context.Response.StatusCode = 416
+                    $context.Response.Headers.Add("Content-Range", "bytes */$fileSize")
+                    $context.Response.Close()
+                    $fileStream.Close()
+                    continue
+                }
+
+                $length = $end - $start + 1
+                $context.Response.StatusCode = 206
+                $context.Response.Headers.Add("Content-Range", "bytes $start-$end/$fileSize")
+                $context.Response.ContentLength64 = $length
+                
+                $fileStream.Seek($start, [System.IO.SeekOrigin]::Begin) | Out-Null
+                $buffer = New-Object byte[] 65536
+                $bytesRemaining = $length
+                while ($bytesRemaining -gt 0) {
+                    $bytesToRead = if ($bytesRemaining -lt $buffer.Length) { [int]$bytesRemaining } else { $buffer.Length }
+                    $bytesRead = $fileStream.Read($buffer, 0, $bytesToRead)
+                    if ($bytesRead -eq 0) { break }
+                    $context.Response.OutputStream.Write($buffer, 0, $bytesRead)
+                    $bytesRemaining -= $bytesRead
+                }
+            } else {
+                $context.Response.StatusCode = 200
+                $context.Response.ContentLength64 = $fileSize
+                $fileStream.CopyTo($context.Response.OutputStream)
+            }
+            $fileStream.Close()
         } else {
             $context.Response.StatusCode = 404
         }

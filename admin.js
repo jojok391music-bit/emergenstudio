@@ -79,7 +79,7 @@ async function uploadFile(file) {
     try {
         const response = await fetch('/api/upload', {
             method: 'POST',
-            headers: { 'X-Filename': file.name },
+            headers: { 'X-Filename': encodeURIComponent(file.name) },
             body: file
         });
         if (response.ok) {
