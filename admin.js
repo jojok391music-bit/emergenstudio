@@ -17,29 +17,6 @@ let appSettings = {};
 
 // Check session on load
 document.addEventListener('DOMContentLoaded', () => {
-    // Restrict admin panel to localhost only
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '';
-    
-    if (!isLocalhost) {
-        adminAuthContainer.innerHTML = `
-            <div class="auth-card" style="max-width: 500px;">
-                <img src="emergenstudioLOGO.svg" alt="Emergen Studio Logo">
-                <h2>Admin Disabled Online</h2>
-                <p style="margin-bottom: 24px;">For security and technical reasons, the Admin Dashboard can only be accessed locally (on your own computer).</p>
-                <div style="background: var(--bg-body); padding: 16px; border-radius: var(--radius-sm); text-align: left; font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 24px;">
-                    <strong>How to update your site:</strong><br><br>
-                    1. Run <code>.\\server.ps1</code> on your computer.<br>
-                    2. Go to <code>http://localhost:8080/admin.html</code> to make changes.<br>
-                    3. Run the <code>update.ps1</code> script to push changes to Vercel.
-                </div>
-                <a href="index.html" class="btn btn-primary" style="width: 100%; padding: 12px; text-decoration: none;">Return to Live Site</a>
-            </div>
-        `;
-        adminAuthContainer.classList.remove('hidden');
-        adminDashboardContainer.classList.add('hidden');
-        return;
-    }
-
     if (sessionStorage.getItem('isAdminAuthenticated') === 'true') {
         showDashboard();
     } else {
