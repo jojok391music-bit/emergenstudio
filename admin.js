@@ -119,38 +119,10 @@ async function uploadFile(file) {
 // Dashboard Form Management
 // ==========================================
 
-// Video Radio Toggles
-const sourceUrlRadio = document.getElementById('sourceUrl');
-const sourceFileRadio = document.getElementById('sourceFile');
-const urlInputContainer = document.getElementById('urlInputContainer');
-const fileInputContainer = document.getElementById('fileInputContainer');
-
-if (sourceUrlRadio && sourceFileRadio) {
-    sourceUrlRadio.addEventListener('change', () => {
-        urlInputContainer.classList.remove('hidden');
-        fileInputContainer.classList.add('hidden');
-    });
-    
-    sourceFileRadio.addEventListener('change', () => {
-        urlInputContainer.classList.add('hidden');
-        fileInputContainer.classList.remove('hidden');
-    });
-}
-
 // Load Settings
 function loadSettingsIntoForm() {
     // 1. Video
-    const videoType = appSettings.videoType || 'url';
     const videoUrl = appSettings.videoUrl || '';
-    if (videoType === 'url') {
-        sourceUrlRadio.checked = true;
-        urlInputContainer.classList.remove('hidden');
-        fileInputContainer.classList.add('hidden');
-    } else {
-        sourceFileRadio.checked = true;
-        urlInputContainer.classList.add('hidden');
-        fileInputContainer.classList.remove('hidden');
-    }
     document.getElementById('adminVideoUrl').value = videoUrl;
 
     // 2. Social Links
@@ -204,18 +176,8 @@ if (adminDashboardForm) {
         if(bottomBtn) bottomBtn.disabled = true;
 
         // Video Settings
-        const selectedVideoType = document.querySelector('input[name="videoSource"]:checked').value;
-        appSettings.videoType = selectedVideoType;
-        
-        if (selectedVideoType === 'url') {
-            appSettings.videoUrl = document.getElementById('adminVideoUrl').value.trim();
-        } else if (selectedVideoType === 'file') {
-            const file = document.getElementById('adminVideoFile').files[0];
-            if (file) {
-                const path = await uploadFile(file);
-                if (path) appSettings.uploadedVideoPath = path;
-            }
-        }
+        appSettings.videoType = 'url';
+        appSettings.videoUrl = document.getElementById('adminVideoUrl').value.trim();
 
         // Social Links
         appSettings.socialInstagram = document.getElementById('socialInstagram').value.trim();

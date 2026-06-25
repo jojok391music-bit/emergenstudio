@@ -327,26 +327,10 @@
                         <h3>1. Hero Video Settings</h3>
                     </div>
                     <div class="card-body">
-                        <div class="radio-group">
-                            <label class="radio-label">
-                                <input type="radio" name="videoSource" value="url" id="sourceUrl" checked>
-                                Video URL (YouTube/Instagram)
-                            </label>
-                            <label class="radio-label">
-                                <input type="radio" name="videoSource" value="file" id="sourceFile">
-                                Upload MP4 File
-                            </label>
-                        </div>
-                        
                         <div id="urlInputContainer" class="form-group">
-                            <label for="adminVideoUrl">Video Link</label>
+                            <label for="adminVideoUrl">Video Link (YouTube/Instagram/MP4 URL)</label>
                             <input type="url" id="adminVideoUrl" class="form-control" placeholder="https://www.youtube.com/watch?v=...">
-                        </div>
-                        
-                        <div id="fileInputContainer" class="form-group hidden">
-                            <label for="adminVideoFile">Upload MP4</label>
-                            <input type="file" id="adminVideoFile" accept="video/mp4" class="form-control" style="padding: 8px;">
-                            <p class="help-text">Video is uploaded and stored securely on the server.</p>
+                            <p class="help-text">Paste a YouTube, Instagram, or direct video URL.</p>
                         </div>
                     </div>
                 </div>

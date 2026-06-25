@@ -216,8 +216,6 @@ function loadVideo() {
         } else {
             renderPlaceholder();
         }
-    } else if (videoType === 'file' && appSettings.uploadedVideoPath) {
-        container.innerHTML = `<video src="${appSettings.uploadedVideoPath}" autoplay loop muted playsinline style="width:100%; height:100%; object-fit: cover;"></video>`;
     } else {
         renderPlaceholder();
     }
