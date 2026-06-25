@@ -49,8 +49,12 @@ try {
                     $filename = "upload.bin"
                 }
                 
-                # Sanitize filename to prevent path traversal
+                # Sanitize filename to prevent path traversal and invalid characters
                 $filename = [System.IO.Path]::GetFileName($filename)
+                $invalid = [System.IO.Path]::GetInvalidFileNameChars()
+                foreach ($c in $invalid) { $filename = $filename.Replace($c, '_') }
+                # Also replace newlines manually just in case
+                $filename = $filename.Replace("`r", "_").Replace("`n", "_")
                 
                 $uploadDir = Join-Path (Get-Location).Path "uploads"
                 if (-not (Test-Path $uploadDir)) { New-Item -ItemType Directory -Force -Path $uploadDir | Out-Null }
