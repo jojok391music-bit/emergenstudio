@@ -171,13 +171,12 @@ async function fetchSettings() {
 
 // Dynamic Video Embed Loader
 function loadVideo() {
-    const videoType = appSettings.videoType || 'placeholder';
     const videoUrl = appSettings.videoUrl || '';
     const container = document.getElementById('videoContainer');
     
     if (!container) return;
     
-    if (videoType === 'url' && videoUrl) {
+    if (videoUrl) {
         let embedSrc = '';
         if (videoUrl.includes('youtube') || videoUrl.includes('youtu.be')) {
             let videoId = '';
