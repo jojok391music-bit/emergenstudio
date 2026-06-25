@@ -133,6 +133,10 @@ function loadSettingsIntoForm() {
     document.getElementById('workTitle3').value = appSettings.workTitle3 || 'Urban Threads';
     document.getElementById('workDesc3').value = appSettings.workDesc3 || 'E-commerce Website & Ads';
 
+    document.getElementById('workImg1').value = appSettings.workImage1Path || '';
+    document.getElementById('workImg2').value = appSettings.workImage2Path || '';
+    document.getElementById('workImg3').value = appSettings.workImage3Path || '';
+
     // 6. Marquee Brands
     const defaultMarquee = 'CAFÉ | DE KOLKATA, FITNESS | EMPIRE, The | Bakeshop, URBAN | THREADS, HOUSE OF | LUXE, GRILL | NATION';
     document.getElementById('marqueeBrands').value = appSettings.marqueeBrands || defaultMarquee;
@@ -185,23 +189,9 @@ if (adminDashboardForm) {
         appSettings.workDesc3 = document.getElementById('workDesc3').value.trim();
 
         // Portfolio Images
-        const img1 = document.getElementById('workImg1').files[0];
-        if (img1) {
-            const path1 = await uploadFile(img1);
-            if (path1) appSettings.workImage1Path = path1;
-        }
-        
-        const img2 = document.getElementById('workImg2').files[0];
-        if (img2) {
-            const path2 = await uploadFile(img2);
-            if (path2) appSettings.workImage2Path = path2;
-        }
-
-        const img3 = document.getElementById('workImg3').files[0];
-        if (img3) {
-            const path3 = await uploadFile(img3);
-            if (path3) appSettings.workImage3Path = path3;
-        }
+        appSettings.workImage1Path = document.getElementById('workImg1').value.trim();
+        appSettings.workImage2Path = document.getElementById('workImg2').value.trim();
+        appSettings.workImage3Path = document.getElementById('workImg3').value.trim();
 
         // Marquee Brands
         appSettings.marqueeBrands = document.getElementById('marqueeBrands').value.trim();
